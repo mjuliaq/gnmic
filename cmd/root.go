@@ -231,3 +231,12 @@ func gather(ctx context.Context, c chan string, ls *[]string) {
 		}
 	}
 }
+
+func snl(s string, l []string) bool {
+	for _, sl := range l {
+		if s == sl {
+			return true
+		}
+	}
+	return false
+}
