@@ -58,9 +58,18 @@ var f io.WriteCloser
 var logger *log.Logger
 
 type target struct {
-	Address  string
-	Username string
-	Password string
+	Address       string
+	Username      string
+	Password      string
+	Subscriptions []string
+}
+
+type subscription struct {
+	Name              string
+	Paths             []string
+	Mode              string
+	SampleInterval    time.Duration
+	HeartbeatInterval time.Duration
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -160,7 +169,7 @@ func initConfig() {
 
 		// Search config in home directory with name ".gnmic" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".gnmic")
+		viper.SetConfigName("gnmic")
 	}
 
 	//viper.AutomaticEnv() // read in environment variables that match
@@ -530,4 +539,36 @@ func numTargets() int {
 		return len(targets)
 	}
 	return 0
+}
+
+func getSubscriptions() (map[string]*subscription, error) {
+	var err error
+	subs := viper.GetStringMap("subscriptions")
+	if subs == nil {
+		return nil, nil
+	}
+	subscriptions := make(map[string]*subscription)
+	for n, s := range subs {
+		sub := new(subscription)
+		decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+			DecodeHook: mapstructure.StringToTimeDurationHookFunc(),
+			Result:     sub,
+		})
+		if err != nil {
+			return nil, err
+		}
+		err = decoder.Decode(s)
+		if err != nil {
+			return nil, err
+		}
+		if sub.Mode == "sample" || sub.Mode == "on-change" || sub.Mode == "target-defined" {
+			return nil, fmt.Errorf("invalid subscription mode: %s", sub.Mode)
+		}
+		subscriptions[n] = sub
+		if sub.SampleInterval == 0 && sub.Mode == "sample" {
+			sub.SampleInterval = defaultSampleInterval
+		}
+		fmt.Printf("%v\n", sub)
+	}
+	return subscriptions, err
 }

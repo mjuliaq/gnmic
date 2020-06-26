@@ -25,11 +25,12 @@ subscriptions:
       - /configure/port[port-id=*]
       - /state
     mode: on_change # target-defined # sample
+    HeartbeatInterval: 30s
   sub2:
     paths:
        - /configure/port[port-id=*]
     mode: sample
-    sample-interval: 30s
+    sampleInterval: 1s
 
 outputs:
   file:

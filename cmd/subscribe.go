@@ -39,6 +39,8 @@ import (
 	"google.golang.org/protobuf/encoding/prototext"
 )
 
+var defaultSampleInterval = 10 * time.Second
+
 type msg struct {
 	Meta             map[string]interface{} `json:"meta,omitempty"`
 	Source           string                 `json:"source,omitempty"`
@@ -69,6 +71,7 @@ var subscribeCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		fmt.Println(getSubscriptions())
 		subscReq, err := createSubscribeRequest()
 		if err != nil {
 			return err
@@ -381,6 +384,7 @@ func init() {
 	subscribeCmd.Flags().StringP("heartbeat-interval", "", "0s", "heartbeat interval in case suppress-redundant is enabled")
 	subscribeCmd.Flags().StringSliceP("model", "", []string{""}, "subscribe request used model(s)")
 	subscribeCmd.Flags().BoolP("quiet", "", false, "suppress stdout printing")
+	subscribeCmd.SilenceUsage = true
 	//
 	viper.BindPFlag("subscribe-prefix", subscribeCmd.LocalFlags().Lookup("prefix"))
 	viper.BindPFlag("subscribe-path", subscribeCmd.LocalFlags().Lookup("path"))
